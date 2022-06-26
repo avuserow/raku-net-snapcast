@@ -1,0 +1,25 @@
+{
+  "auth": "cpan:AVUSEROW",
+  "authors": [
+    "Adrian Kreher"
+  ],
+  "build-depends": [
+  ],
+  "depends": [
+  ],
+  "description": "blah blah blah",
+  "license": "Artistic-2.0",
+  "name": "Net::Snapcast",
+  "perl": "6.d",
+  "provides": {
+    "Net::Snapcast": "lib/Net/Snapcast.rakumod"
+  },
+  "resources": [
+  ],
+  "source-url": "",
+  "tags": [
+  ],
+  "test-depends": [
+  ],
+  "version": "0.0.1"
+}

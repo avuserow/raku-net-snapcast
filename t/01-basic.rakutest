@@ -1,0 +1,6 @@
+use Test;
+use Net::Snapcast;
+
+pass "replace me";
+
+done-testing;
