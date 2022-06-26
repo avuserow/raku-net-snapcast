@@ -8,7 +8,7 @@
   "depends": [
     "JSON::Fast"
   ],
-  "description": "blah blah blah",
+  "description": "Control Snapcast audio players",
   "license": "Artistic-2.0",
   "name": "Net::Snapcast",
   "perl": "6.d",
@@ -17,8 +17,9 @@
   },
   "resources": [
   ],
-  "source-url": "",
+  "source-url": "https://github.com/avuserow/raku-net-snapcast",
   "tags": [
+    "audio"
   ],
   "test-depends": [
   ],

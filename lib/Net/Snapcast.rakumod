@@ -211,7 +211,7 @@ method set-volume(Str $client-id, Int $volume) {
 
 =head1 NAME
 
-Net::Snapcast - blah blah blah
+Net::Snapcast - Control Snapcast audio players
 
 =head1 SYNOPSIS
 
@@ -219,11 +219,73 @@ Net::Snapcast - blah blah blah
 
 use Net::Snapcast;
 
+my $sc = Net::Snapcast.new(:$host, :port(1705));
+
+# list clients attached to snapcast
+my @clients = $sc.list-clients;
+
+# change volume on a client
+$sc.set-volume(@clients[0].id, 100);
+
+# listen for events (from other clients only)
+# interface will be changed!
+$sc.callback = sub ($method, $params) {dd $method, $params};
+
 =end code
 
 =head1 DESCRIPTION
 
-Net::Snapcast is ...
+Net::Snapcast is an interface for controlling players connected to a Snapcast server. Snapcast is a client/server system for building a multiroom audio system. The server consumes audio from one or more sources, controls which client receives which audio stream, and manages latency to keep audio playback synchronized. See L<https://github.com/badaix/snapcast> for more details on Snapcast.
+
+This module implements the control interface to Snapcast, allowing you to manage the various players. You can programmatically control what client is connected to which stream, change the volume, and receive notifications of changes made by other clients.
+
+This module does not implement any audio sending or receiving. In snapcast terms, this implements the "Control API" (on port 1705 by default).
+
+=head1 METHODS
+
+=head2 new(:$host, :$port)
+
+Connects to the given Snapcast server and synchronizes the state.
+
+=head2 list-clients
+
+Returns a list of clients. See the C<Net::Snapcast::Snapclient> class below for the included attributes.
+
+=head2 set-volume($id, $volume)
+
+Sets the volume level of the provided client.
+
+=head2 sync
+
+Re-sync cached snapcast data. This is called automatically as needed and should not need to be invoked manually.
+
+=head1 SUBCLASSES
+
+=head2 Snapclient - details about a connected client
+
+This class is returned from C<list-clients>. This is called "snapclient" after the snapcast player command's name. All attributes should be considered read-only.
+
+=head3 Client Attributes
+
+=item Str id - snapcast-assigned client ID, defaults to MAC address with optional instance ID
+=item Str name - configured client name, as set by the snapcast API C<Client.SetName>. Defaults to hostname if unset, and there may be duplicate client names.
+=item Int instance - instance ID of the snapcast clients. Defaults to 1 and only changed when running multiple clients per computer
+=item Str hostname - hostname of the computer running this client
+=item Str os - operating system of this client
+=item Str ip - IP address of this client
+=item Str arch - architecture of this client (e.g. C<x86_64>, C<armv6l>, C<arm64-v8a>)
+=item Str mac - MAC address of this client, if available (otherwise may be all zeroes)
+=item Bool connected - indicates whether this client is currently connected to snapcast (or if the server just remembers this client). You can still modify attributes of disconnected clients, but they disappear upon server restart.
+=item Bool muted - indicates whether this client is muted in snapcast
+=item Int volume - indicates volume level within snapcast
+=item Str group-id - ID of the group containing this client (NOTE: group APIs are not yet implemented)
+=item Str stream-id - ID of the audio stream that this client is consuming (actually the "name" of the stream in snapcast config)
+
+=head1 SEE ALSO
+
+L<https://github.com/badaix/snapcast> - snapcast repo
+
+L<https://github.com/badaix/snapcast/blob/master/doc/json_rpc_api/control.md> - documentation for control protocol
 
 =head1 AUTHOR
 
