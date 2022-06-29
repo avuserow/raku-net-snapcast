@@ -117,7 +117,8 @@ class Client {
 has $!client;
 
 has %!clients;
-has $.callback is rw;
+
+has Supplier $!notifications = Supplier.new;
 
 submethod BUILD(Str :$host, Int :$port) {
     $!client = RPCClient.new(:$host, :$port);
@@ -150,16 +151,12 @@ method !setup-notifications {
             }
         }
 
-        if $.callback {
-            dd $e<method>, $e<params>;
-            $.callback.($e<method>, $e<params>);
-            CATCH {
-                default {
-                    .say;
-                }
-            }
-        }
+        $!notifications.emit($e);
     });
+}
+
+method notifications(--> Supply) {
+    return $!notifications.Supply;
 }
 
 method !handle-client-disconnect($params) {
@@ -227,9 +224,11 @@ my @clients = $sc.list-clients;
 # change volume on a client
 $sc.set-volume(@clients[0].id, 100);
 
-# listen for events (from other clients only)
-# interface will be changed!
-$sc.callback = sub ($method, $params) {dd $method, $params};
+# get a supply of events (from other clients only)
+# see documentation at https://github.com/badaix/snapcast/blob/master/doc/json_rpc_api/control.md#notifications
+$sc.notifications.tap(-> $e {
+    say "event type $e<method>: $e<params>";
+})
 
 =end code
 
@@ -241,11 +240,23 @@ This module implements the control interface to Snapcast, allowing you to manage
 
 This module does not implement any audio sending or receiving. In snapcast terms, this implements the "Control API" (on port 1705 by default).
 
+This module is currently tested with a Snapcast server running 0.25.0.
+
 =head1 METHODS
 
 =head2 new(:$host, :$port)
 
 Connects to the given Snapcast server and synchronizes the state.
+
+=head2 sync
+
+Re-sync cached snapcast data. This is called automatically as needed and should not need to be invoked manually.
+
+=head2 notifications
+
+Returns a Supply that receives events from other clients. If this client makes an RPC call (e.g. C<set-volume>), then this Supply will not receive an event.
+
+Events are documented at L<https://github.com/badaix/snapcast/blob/master/doc/json_rpc_api/control.md#notifications> and may vary depending on the Snapcast server.
 
 =head2 list-clients
 
@@ -254,10 +265,6 @@ Returns a list of clients. See the C<Net::Snapcast::Snapclient> class below for 
 =head2 set-volume($id, $volume)
 
 Sets the volume level of the provided client.
-
-=head2 sync
-
-Re-sync cached snapcast data. This is called automatically as needed and should not need to be invoked manually.
 
 =head1 SUBCLASSES
 
