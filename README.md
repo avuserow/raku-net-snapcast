@@ -19,9 +19,11 @@ my @clients = $sc.list-clients;
 # change volume on a client
 $sc.set-volume(@clients[0].id, 100);
 
-# listen for events (from other clients only)
-# interface will be changed!
-$sc.callback = sub ($method, $params) {dd $method, $params};
+# get a supply of events (from other clients only)
+# see documentation at https://github.com/badaix/snapcast/blob/master/doc/json_rpc_api/control.md#notifications
+$sc.notifications.tap(-> $e {
+    say "event type $e<method>: $e<params>";
+})
 ```
 
 DESCRIPTION
@@ -33,6 +35,8 @@ This module implements the control interface to Snapcast, allowing you to manage
 
 This module does not implement any audio sending or receiving. In snapcast terms, this implements the "Control API" (on port 1705 by default).
 
+This module is currently tested with a Snapcast server running 0.25.0.
+
 METHODS
 =======
 
@@ -40,6 +44,18 @@ new(:$host, :$port)
 -------------------
 
 Connects to the given Snapcast server and synchronizes the state.
+
+sync
+----
+
+Re-sync cached snapcast data. This is called automatically as needed and should not need to be invoked manually.
+
+notifications
+-------------
+
+Returns a Supply that receives events from other clients. If this client makes an RPC call (e.g. `set-volume`), then this Supply will not receive an event.
+
+Events are documented at [https://github.com/badaix/snapcast/blob/master/doc/json_rpc_api/control.md#notifications](https://github.com/badaix/snapcast/blob/master/doc/json_rpc_api/control.md#notifications) and may vary depending on the Snapcast server.
 
 list-clients
 ------------
@@ -50,11 +66,6 @@ set-volume($id, $volume)
 ------------------------
 
 Sets the volume level of the provided client.
-
-sync
-----
-
-Re-sync cached snapcast data. This is called automatically as needed and should not need to be invoked manually.
 
 SUBCLASSES
 ==========
