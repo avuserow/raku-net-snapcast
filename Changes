@@ -1,6 +1,7 @@
 Revision history for Net-Snapcast
 
 {{$NEXT}}
+    - Implement a simple connection timeout
 
 0.0.2  2022-06-28T20:04:33-05:00
     - Use a Supply for notifications

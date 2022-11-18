@@ -9,6 +9,9 @@ my class RPCClient {
     has $!notifications = Channel.new;
     has $!conn;
 
+    # Timeout for sending commands
+    has Int $.timeout = 5;
+
     submethod BUILD(Str :$host, Int :$port) {
         $!conn = IO::Socket::Async.connect($host, $port).then(-> $promise {
             given $promise.result -> $s {
@@ -68,7 +71,15 @@ my class RPCClient {
         %request<params> = $_ with $params;
 
         $!inputc.send(to-json(%request, :!pretty));
-        my $resp = $!outputc.receive;
+
+        my $resp;
+        await Promise.anyof(
+            Promise.in($.timeout),
+            start {$resp = $!outputc.receive},
+        );
+
+        die "Timeout calling $method" unless $resp;
+
         return $resp<result>;
     }
 }
