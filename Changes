@@ -1,6 +1,8 @@
 Revision history for Net-Snapcast
 
 {{$NEXT}}
+
+0.0.3  2022-11-17T22:36:22-06:00
     - Implement a simple connection timeout
 
 0.0.2  2022-06-28T20:04:33-05:00
