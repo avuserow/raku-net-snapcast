@@ -204,13 +204,15 @@ method list-clients {
     %!clients.values.sort(*.name);
 }
 
-method set-volume(Str $client-id, Int $volume) {
+method set-volume(Str $client-id, Any(Int) $volume?, Any(Bool) :$muted) {
     # say "set-volume: $client-id to $volume";
+    my $param = {};
+    $param<percent> = $_ with $volume;
+    $param<muted> = ?$_ with $muted;
+
     my $resp = $!client.call('Client.SetVolume', {
         id => $client-id,
-        volume => {
-            percent => $volume,
-        },
+        volume => $param,
     });
     self!handle-client-volume-change({id => $client-id, |$resp});
 }
@@ -273,9 +275,9 @@ Events are documented at L<https://github.com/badaix/snapcast/blob/master/doc/js
 
 Returns a list of clients. See the C<Net::Snapcast::Snapclient> class below for the included attributes.
 
-=head2 set-volume($id, $volume)
+=head2 set-volume($id, Int $volume?, Bool :$muted)
 
-Sets the volume level of the provided client.
+Sets the volume level of the provided client and/or changes the mute status. You can pass either volume, mute, or both.
 
 =head1 SUBCLASSES
 

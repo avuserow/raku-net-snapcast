@@ -62,10 +62,10 @@ list-clients
 
 Returns a list of clients. See the `Net::Snapcast::Snapclient` class below for the included attributes.
 
-set-volume($id, $volume)
-------------------------
+set-volume($id, Int $volume?, Bool :$muted)
+-------------------------------------------
 
-Sets the volume level of the provided client.
+Sets the volume level of the provided client and/or changes the mute status. You can pass either volume, mute, or both.
 
 SUBCLASSES
 ==========

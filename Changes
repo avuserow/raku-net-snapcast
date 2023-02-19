@@ -1,6 +1,7 @@
 Revision history for Net-Snapcast
 
 {{$NEXT}}
+    - Implement mute/unmute
 
 0.0.3  2022-11-17T22:36:22-06:00
     - Implement a simple connection timeout
