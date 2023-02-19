@@ -1,6 +1,8 @@
 Revision history for Net-Snapcast
 
 {{$NEXT}}
+
+0.0.4  2023-02-18T20:55:30-06:00
     - Implement mute/unmute
 
 0.0.3  2022-11-17T22:36:22-06:00
