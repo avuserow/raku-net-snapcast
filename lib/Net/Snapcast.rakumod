@@ -142,7 +142,7 @@ method !setup-notifications {
             when 'Client.OnVolumeChanged' {
                 self!handle-client-volume-change($e<params>);
             }
-            when 'Client.OnConnect' {
+            when 'Client.OnConnect' | 'Client.OnNameChanged' {
                 # just re-sync here, since we really want to know what stream it belongs to
                 self.sync;
             }
