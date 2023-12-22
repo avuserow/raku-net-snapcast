@@ -2,6 +2,9 @@ Revision history for Net-Snapcast
 
 {{$NEXT}}
 
+0.0.5  2023-12-22T14:51:14-06:00
+    - Resync on Client.OnNameChanged
+
 0.0.4  2023-02-18T20:55:30-06:00
     - Implement mute/unmute
 
