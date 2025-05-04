@@ -84,7 +84,7 @@ my class RPCClient {
     }
 }
 
-# Represents a snapcast client
+# Represents a snapcast client (basically, a device playing audio)
 class Client {
     has Str $.id is readonly;
     has Str $.name is readonly;
@@ -125,9 +125,19 @@ class Client {
     }
 }
 
-has $!client;
+class Stream {
+    has Str $.id is readonly;
+    has Str $.name is readonly;
+    has Str $.status is readonly;
+
+    # True if this is the first stream - which snapcast clients automatically join
+    has Bool $.default is readonly;
+}
+
+has RPCClient $!client;
 
 has %!clients;
+has %!streams;
 
 has Supplier $!notifications = Supplier.new;
 
@@ -180,7 +190,6 @@ method !handle-client-volume-change($params) {
         return;
     }
 
-    # say "updating volume for $params<id>: $params<volume><percent>, $params<volume><muted>, $params.raku()";
     %!clients{$params<id>}.volume = $params<volume><percent>;
     %!clients{$params<id>}.muted = $params<volume><muted>;
 }
@@ -198,14 +207,26 @@ method sync {
             %!clients{$_<id>} = Client.new(:client($_), :$stream-id, :$group-id);
         }
     }
+
+    %!streams = ();
+    for $resp<server><streams>.list.kv -> $i, $stream {
+        my $id = $stream<id>;
+        my $name = $stream<uri><query><name> // $id;
+        my $status = $stream<status>;
+        my $default = $i == 0;
+        %!streams{$id} = Stream.new(:$id, :$name, :$status, :$default);
+    }
 }
 
 method list-clients {
     %!clients.values.sort(*.name);
 }
 
+method list-streams {
+    %!streams.values.sort(*.name);
+}
+
 method set-volume(Str $client-id, Any(Int) $volume?, Any(Bool) :$muted) {
-    # say "set-volume: $client-id to $volume";
     my $param = {};
     $param<percent> = $_ with $volume;
     $param<muted> = ?$_ with $muted;
@@ -215,6 +236,19 @@ method set-volume(Str $client-id, Any(Int) $volume?, Any(Bool) :$muted) {
         volume => $param,
     });
     self!handle-client-volume-change({id => $client-id, |$resp});
+}
+
+method set-stream(Str $group-id, Str $stream-id) {
+    # TODO: validate group-id
+    fail "no such stream: $stream-id" unless %!streams{$stream-id};
+
+    my $resp = $!client.call('Group.SetStream', {
+        id => $group-id,
+        stream_id => $stream-id,
+    });
+
+    # TODO: model groups properly instead of doing a full resync
+    self.sync;
 }
 
 =begin pod
@@ -243,6 +277,9 @@ $sc.notifications.tap(-> $e {
     say "event type $e<method>: $e<params>";
 })
 
+# change a group's stream
+$sc.set-stream(@clients[0].group-id, "my-stream");
+
 =end code
 
 =head1 DESCRIPTION
@@ -251,9 +288,9 @@ Net::Snapcast is an interface for controlling players connected to a Snapcast se
 
 This module implements the control interface to Snapcast, allowing you to manage the various players. You can programmatically control what client is connected to which stream, change the volume, and receive notifications of changes made by other clients.
 
-This module does not implement any audio sending or receiving. In snapcast terms, this implements the "Control API" (on port 1705 by default).
+This module does not implement any audio sending or receiving. In snapcast terms, this implements the "Control API" (on port 1705 by default) via JSON-RPC.
 
-This module is currently tested with a Snapcast server running 0.25.0.
+This module is currently tested with a Snapcast server running 0.29.0.
 
 =head1 METHODS
 
@@ -278,6 +315,12 @@ Returns a list of clients. See the C<Net::Snapcast::Snapclient> class below for 
 =head2 set-volume($id, Int $volume?, Bool :$muted)
 
 Sets the volume level of the provided client and/or changes the mute status. You can pass either volume, mute, or both.
+
+=head2 set-stream($group-id, $stream-name)
+
+Set the stream for the provided group. Snapcast sets the stream on a per-group basis rather than per-client, so this requires the group ID rather than the client ID.
+
+This module does not have the ability to manipulate groups yet. Patches welcome.
 
 =head1 SUBCLASSES
 
@@ -313,7 +356,7 @@ Adrian Kreher <avuserow@gmail.com>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2022-2023 Adrian Kreher
+Copyright 2022-2025 Adrian Kreher
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 
