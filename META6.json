@@ -17,7 +17,7 @@
   },
   "resources": [
   ],
-  "source-url": "https://github.com/avuserow/raku-net-snapcast",
+  "source-url": "https://github.com/avuserow/raku-net-snapcast.git",
   "tags": [
     "audio"
   ],

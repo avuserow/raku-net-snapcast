@@ -24,6 +24,9 @@ $sc.set-volume(@clients[0].id, 100);
 $sc.notifications.tap(-> $e {
     say "event type $e<method>: $e<params>";
 })
+
+# change a group's stream
+$sc.set-stream(@clients[0].group-id, "my-stream");
 ```
 
 DESCRIPTION
@@ -33,9 +36,9 @@ Net::Snapcast is an interface for controlling players connected to a Snapcast se
 
 This module implements the control interface to Snapcast, allowing you to manage the various players. You can programmatically control what client is connected to which stream, change the volume, and receive notifications of changes made by other clients.
 
-This module does not implement any audio sending or receiving. In snapcast terms, this implements the "Control API" (on port 1705 by default).
+This module does not implement any audio sending or receiving. In snapcast terms, this implements the "Control API" (on port 1705 by default) via JSON-RPC.
 
-This module is currently tested with a Snapcast server running 0.25.0.
+This module is currently tested with a Snapcast server running 0.29.0.
 
 METHODS
 =======
@@ -66,6 +69,13 @@ set-volume($id, Int $volume?, Bool :$muted)
 -------------------------------------------
 
 Sets the volume level of the provided client and/or changes the mute status. You can pass either volume, mute, or both.
+
+set-stream($group-id, $stream-name)
+-----------------------------------
+
+Set the stream for the provided group. Snapcast sets the stream on a per-group basis rather than per-client, so this requires the group ID rather than the client ID.
+
+This module does not have the ability to manipulate groups yet. Patches welcome.
 
 SUBCLASSES
 ==========
@@ -118,7 +128,7 @@ Adrian Kreher <avuserow@gmail.com>
 COPYRIGHT AND LICENSE
 =====================
 
-Copyright 2022-2023 Adrian Kreher
+Copyright 2022-2025 Adrian Kreher
 
 This library is free software; you can redistribute it and/or modify it under the Artistic License 2.0.
 
